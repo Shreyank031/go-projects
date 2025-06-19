@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"syscall"
@@ -12,10 +13,12 @@ func getDiskUsage(path string) {
 	err := syscall.Statfs(path, &stat)
 	if err != nil {
 		fmt.Printf("Error fetching disk usage for '%s': '%v'\n", path, err)
+		return
 	}
 
 	total := stat.Blocks * uint64(stat.Bsize)
-	free := stat.Bfree * uint64(stat.Bsize)
+	//free := stat.Bfree * uint64(stat.Bsize)
+	free := stat.Bavail * uint64(stat.Bsize)
 	used := total - free
 
 	percentUsed := (float64(used) / float64(total)) * 100
@@ -29,18 +32,23 @@ func getDiskUsage(path string) {
 func main() {
 	//	fmt.Println("Hello, World!")
 
-	path := "/"
-	if len(os.Args) > 1 {
-		path = os.Args[1]
-	}
-	_, err := os.Stat(path)
+	//path := "/"
+	path := flag.String("path", "/", "Path to check disk usage")
+	flag.Parse()
+
+	/* 	if len(os.Args) > 1 {
+	   		path = os.Args[1]
+	   	}
+	*/
+
+	_, err := os.Stat(*path)
 	if os.IsNotExist(err) {
-		fmt.Printf("Error: '%s' path doesn't exist.\n", path)
+		fmt.Printf("Error: '%s' path doesn't exist.\n", *path)
 		return
 	} else if err != nil {
-		fmt.Printf("Error occured while accessing the path '%s': '%v'\n", path, err)
+		fmt.Printf("Error occured while accessing the path '%s': '%v'\n", *path, err)
 	}
 
-	getDiskUsage(path)
+	getDiskUsage(*path)
 
 }
